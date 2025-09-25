@@ -138,8 +138,15 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
     }
 
     @Override
-    public void supprimer(String id) {
-
+    public void supprimer(String id) throws SQLException {
+        String sql = "DELETE FROM Abonnement WHERE id = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setObject(1, UUID.fromString(id));
+            pr.execute();
+            System.out.println("Abonnement supprimé avec succès");
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
