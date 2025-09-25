@@ -5,6 +5,7 @@ import entity.Abonnement;
 import entity.AbonnementAvecEngagement;
 import entity.AbonnementSansEngagement;
 import utilities.AbnStatut;
+import utilities.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -77,8 +78,39 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
     }
 
     @Override
-    public List<Abonnement> findAll() {
-        return Collections.emptyList();
+    public List<Abonnement> findAll() throws SQLException {
+        List<Abonnement> abonnementsList = new ArrayList<>();
+        String sql = "SELECT * FROM abonnement";
+        PreparedStatement pr = connection.prepareStatement(sql);
+        try (ResultSet result = pr.executeQuery()) {
+            Abonnement ab;
+            while (result.next()) {
+                if (result.getString("type_abonnement").equals("AVEC_ENGAGEMENT")) {
+                    ab = new AbonnementAvecEngagement(
+                            (UUID) result.getObject("id"),
+                            result.getString("nom_service"),
+                            result.getDouble("montant_mensuel"),
+                            result.getDate("date_debut").toLocalDate(),
+                            result.getDate("date_fin").toLocalDate(),
+                            AbnStatut.valueOf(result.getString("statut")),
+                            result.getInt("duree_engagement_mois")
+                    );
+                } else {
+                    ab = new AbonnementSansEngagement(
+                            (UUID) result.getObject("id"),
+                            result.getString("nom_service"),
+                            result.getDouble("montant_mensuel"),
+                            result.getDate("date_debut").toLocalDate(),
+                            result.getDate("date_fin").toLocalDate(),
+                            AbnStatut.valueOf(result.getString("statut"))
+                    );
+                }
+                abonnementsList.add(ab);
+            }
+            return abonnementsList;
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
