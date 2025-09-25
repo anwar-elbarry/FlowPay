@@ -114,8 +114,27 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
     }
 
     @Override
-    public void modifier(Abonnement a) {
-
+    public void modifier(Abonnement a) throws SQLException {
+        String sql = "UPDATE Abonnement SET nom_service = ?, montant_mensuel = ?, date_debut = ?, " +
+                "date_fin = ?, statut = ?, type_abonnement = ?, duree_engagement_mois = ? " +
+                "WHERE id = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setString(1, a.getNomService());
+            pr.setDouble(2, a.getMontantMensuel());
+            pr.setDate(3, java.sql.Date.valueOf(a.getDateDebut()));
+            pr.setDate(4, java.sql.Date.valueOf(a.getDateFin()));
+            pr.setString(5, a.getStatut().name());
+            pr.setString(6, a instanceof AbonnementAvecEngagement ? "AVEC_ENGAGEMENT" : "SANS_ENGAGEMENT");
+            pr.setInt(7, a instanceof AbonnementAvecEngagement ? ((AbonnementAvecEngagement) a).getDureeEngagementMois() : 0);
+            pr.setObject(8, a.getId());
+            int rowsAffected = pr.executeUpdate();
+            if (rowsAffected == 0) {
+                throw new SQLException("Aucun abonnement modifié");
+            }
+            System.out.println("Abonnement modifié avec succès");
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
