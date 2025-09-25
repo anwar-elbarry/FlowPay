@@ -2,21 +2,31 @@ package entity;
 
 import utilities.AbnStatut;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.UUID;
 
 public abstract class Abonnement {
-    protected String id;
+    protected UUID id;
     protected String nomService;
     protected double montantMensuel;
-    protected LocalDateTime dateDebut;
-    protected LocalDateTime dateFin;
+    protected LocalDate dateDebut;
+    protected LocalDate dateFin;
     protected AbnStatut statut;
 
-    public String getId() {
+    public Abonnement(UUID id, String nomService, double montantMensuel, LocalDate dateDebut, LocalDate dateFin, AbnStatut statut) {
+        this.id = id;
+        this.nomService = nomService;
+        this.montantMensuel = montantMensuel;
+        this.dateDebut = dateDebut;
+        this.dateFin = dateFin;
+        this.statut = statut;
+    }
+
+    public UUID getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(UUID id) {
         this.id = id;
     }
 
@@ -36,19 +46,19 @@ public abstract class Abonnement {
         this.montantMensuel = montantMensuel;
     }
 
-    public LocalDateTime getDateFin() {
+    public LocalDate getDateFin() {
         return dateFin;
     }
 
-    public void setDateFin(LocalDateTime dateFin) {
+    public void setDateFin(LocalDate dateFin) {
         this.dateFin = dateFin;
     }
 
-    public LocalDateTime getDateDebut() {
+    public LocalDate getDateDebut() {
         return dateDebut;
     }
 
-    public void setDateDebut(LocalDateTime dateDebut) {
+    public void setDateDebut(LocalDate dateDebut) {
         this.dateDebut = dateDebut;
     }
 
@@ -58,5 +68,10 @@ public abstract class Abonnement {
 
     public void setStatut(AbnStatut statut) {
         this.statut = statut;
+    }
+
+    @Override
+    public String toString() {
+        return "Abonnement [id=" + id + ", nomService=" + nomService + ", montantMensuel=" + montantMensuel + ", dateDebut=" + dateDebut + ", dateFin=" + dateFin + ", statut=" + statut + "]";
     }
 }
