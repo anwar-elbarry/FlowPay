@@ -2,13 +2,13 @@ package entity;
 
 import utilities.PayStatut;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class Paiement {
     private String idPaiement;
     private Abonnement idAbonnement;
-    private LocalDateTime dateEcheance;
-    private LocalDateTime datePaiement;
+    private LocalDate dateEcheance;
+    private LocalDate datePaiement;
     private String typePaiement;
     private PayStatut statut;
 
@@ -28,19 +28,19 @@ public class Paiement {
         this.idAbonnement = idAbonnement;
     }
 
-    public LocalDateTime getDateEcheance() {
+    public LocalDate getDateEcheance() {
         return dateEcheance;
     }
 
-    public void setDateEcheance(LocalDateTime dateEcheance) {
+    public void setDateEcheance(LocalDate dateEcheance) {
         this.dateEcheance = dateEcheance;
     }
 
-    public LocalDateTime getDatePaiement() {
+    public LocalDate getDatePaiement() {
         return datePaiement;
     }
 
-    public void setDatePaiement(LocalDateTime datePaiement) {
+    public void setDatePaiement(LocalDate datePaiement) {
         this.datePaiement = datePaiement;
     }
 
