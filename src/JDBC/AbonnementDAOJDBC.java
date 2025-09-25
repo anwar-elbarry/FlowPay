@@ -150,12 +150,75 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
     }
 
     @Override
-    public List<Abonnement> findByType(String type) {
-        return Collections.emptyList();
+    public List<Abonnement> findByType(String type) throws SQLException {
+        String sql = "SELECT * FROM Abonnement WHERE type_abonnement = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setString(1, type);
+            try (ResultSet result = pr.executeQuery()) {
+                List<Abonnement> abonnementsList = new ArrayList<>();
+                while (result.next()) {
+                    if (Objects.equals(type, "AVEC_ENGAGEMENT")) {
+                        abonnementsList.add(new AbonnementAvecEngagement(
+                                (UUID) result.getObject("id"),
+                                result.getString("nom_service"),
+                                result.getDouble("montant_mensuel"),
+                                result.getDate("date_debut").toLocalDate(),
+                                result.getDate("date_fin").toLocalDate(),
+                                AbnStatut.valueOf(result.getString("statut")),
+                                result.getInt("duree_engagement_mois")));
+                    } else {
+                        abonnementsList.add(new AbonnementSansEngagement(
+                                (UUID) result.getObject("id"),
+                                result.getString("nom_service"),
+                                result.getDouble("montant_mensuel"),
+                                result.getDate("date_debut").toLocalDate(),
+                                result.getDate("date_fin").toLocalDate(),
+                                AbnStatut.valueOf(result.getString("statut"))));
+                    }
+                }
+                return abonnementsList;
+            } catch (SQLException e) {
+                throw new SQLException(e.getMessage());
+            }
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
-    public List<Abonnement> findActiveSubscriptions() {
-        return Collections.emptyList();
+    public List<Abonnement> findActiveSubscriptions() throws SQLException {
+        String sql = "SELECT * FROM Abonnement WHERE statut = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setString(1, AbnStatut.ACTIVE.name());
+            try (ResultSet result = pr.executeQuery()) {
+                Abonnement a;
+                List<Abonnement> abonnementsList = new ArrayList<>();
+                while (result.next()) {
+                    if (result.getString("type_abonnement").equals("AVEC_ENGAGEMENT")) {
+                        abonnementsList.add(new AbonnementAvecEngagement(
+                                (UUID) result.getObject("id"),
+                                result.getString("nom_service"),
+                                result.getDouble("montant_mensuel"),
+                                result.getDate("date_debut").toLocalDate(),
+                                result.getDate("date_fin").toLocalDate(),
+                                AbnStatut.valueOf(result.getString("statut")),
+                                result.getInt("duree_engagement_mois")));
+                    } else {
+                        abonnementsList.add(new AbonnementSansEngagement(
+                                (UUID) result.getObject("id"),
+                                result.getString("nom_service"),
+                                result.getDouble("montant_mensuel"),
+                                result.getDate("date_debut").toLocalDate(),
+                                result.getDate("date_fin").toLocalDate(),
+                                AbnStatut.valueOf(result.getString("statut"))));
+                    }
+                }
+                return abonnementsList;
+            } catch (SQLException e) {
+                throw new SQLException(e.getMessage());
+            }
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 }
