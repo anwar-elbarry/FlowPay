@@ -24,8 +24,12 @@ public class PaiementDAOJDBC implements PaiementDAO {
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
             pr.setObject(1, p.getIdPaiement());
             pr.setObject(2, p.getIdAbonnement());
+            if (p.getDatePaiement() != null) {
+                pr.setDate(4, java.sql.Date.valueOf(p.getDatePaiement()));
+            } else {
+                pr.setNull(4, java.sql.Types.DATE);
+            }
             pr.setDate(3, java.sql.Date.valueOf(p.getDateEcheance()));
-            pr.setDate(4, java.sql.Date.valueOf(p.getDatePaiement()));
             pr.setString(5, p.getTypePaiement());
             pr.setString(6, p.getStatut().name());
             pr.executeUpdate();
@@ -38,7 +42,7 @@ public class PaiementDAOJDBC implements PaiementDAO {
     public Optional<Paiement> findById(String id) throws SQLException {
         String sql = "SELECT * FROM paiement WHERE id_paiement = ?";
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
-            pr.setString(1, id);
+            pr.setObject(1, UUID.fromString(id));
             try (ResultSet result = pr.executeQuery()) {
                 if (result.next()) {
                     return Optional.of(new Paiement(
@@ -82,8 +86,17 @@ public class PaiementDAOJDBC implements PaiementDAO {
     }
 
     @Override
-    public void modifier(Paiement p) {
-
+    public void modifier(Paiement p) throws SQLException {
+        String sql = "UPDATE paiement SET date_echeance = ? , type_paiement = ?,statut = ? WHERE id_paiement = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setDate(1, java.sql.Date.valueOf(p.getDateEcheance()));
+            pr.setString(2, p.getTypePaiement());
+            pr.setString(3, p.getStatut().name());
+            pr.setObject(4, p.getIdPaiement());
+            pr.executeUpdate();
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
