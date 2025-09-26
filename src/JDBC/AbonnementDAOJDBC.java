@@ -5,7 +5,6 @@ import entity.Abonnement;
 import entity.AbonnementAvecEngagement;
 import entity.AbonnementSansEngagement;
 import utilities.AbnStatut;
-import utilities.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -114,7 +113,7 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
     }
 
     @Override
-    public void modifier(Abonnement a) throws SQLException {
+    public Abonnement modifier(Abonnement a) throws SQLException {
         String sql = "UPDATE Abonnement SET nom_service = ?, montant_mensuel = ?, date_debut = ?, " +
                 "date_fin = ?, statut = ?, type_abonnement = ?, duree_engagement_mois = ? " +
                 "WHERE id = ?";
@@ -131,19 +130,19 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
             if (rowsAffected == 0) {
                 throw new SQLException("Aucun abonnement modifié");
             }
-            System.out.println("Abonnement modifié avec succès");
+            return a;
         } catch (SQLException e) {
             throw new SQLException(e.getMessage());
         }
     }
 
     @Override
-    public void supprimer(String id) throws SQLException {
+    public boolean supprimer(String id) throws SQLException {
         String sql = "DELETE FROM Abonnement WHERE id = ?";
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
             pr.setObject(1, UUID.fromString(id));
             pr.execute();
-            System.out.println("Abonnement supprimé avec succès");
+            return true;
         } catch (SQLException e) {
             throw new SQLException(e.getMessage());
         }
