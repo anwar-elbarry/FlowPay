@@ -14,10 +14,7 @@ import utilities.PayStatut;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -74,6 +71,8 @@ public class Main {
                     enregistrerPaiement();
                     break;
                 case 7:
+                    listerAbonnements();
+                    afficherPaiements();
                     modifierPaiement();
                     break;
                 case 8:
@@ -266,7 +265,7 @@ public class Main {
         }
     }
 
-    private static void enregistrerPaiement() throws SQLException {
+    private static void enregistrerPaiement() {
         System.out.print("ID de l'abonnement: ");
         String idAbonnement = scanner.nextLine();
         System.out.println("Date d'echeance (YYYY-MM-DD): ");
@@ -276,9 +275,70 @@ public class Main {
         UUID id = UUID.randomUUID();
         PayStatut statut = PayStatut.NON_PAYE;
         Paiement p = new Paiement(id, dateEcheance, UUID.fromString(idAbonnement), LocalDate.now(), typePaiement, statut);
+        paiementDAOJDBC.create(p);
+        System.out.println("Paiement enregistré avec succès.");
     }
 
     private static void modifierPaiement() throws SQLException {
+        System.out.print("ID du paiement à modifier: ");
+        String id = scanner.nextLine();
+        Optional<Paiement> p = paiementDAOJDBC.findById(id);
+        if (!p.isPresent()) {
+            System.out.println("❌ Paiement introuvable !");
+            return;
+        }
+
+        // Afficher le menu
+        System.out.println("============= Menu des modifications ===========");
+        System.out.println("1. Modifier la date d'échéance");
+        System.out.println("2. Modifier le type de paiement");
+        System.out.println("3. Modifier le statut");
+        System.out.println("4. Annuler");
+        System.out.println("==============================================");
+        System.out.print("Votre choix (1-4) : ");
+
+        int choix;
+        while (true) {
+            try {
+                choix = Integer.parseInt(scanner.nextLine());
+                if (choix >= 1 && choix <= 4) {
+                    break;
+                } else {
+                    System.out.println("❌ Veuillez entrer un nombre entre 1 et 4.");
+                    System.out.print("Votre choix (1-4) : ");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Entrée invalide, veuillez entrer un nombre.");
+                System.out.print("Votre choix (1-4) : ");
+            }
+        }
+
+        switch (choix) {
+            case 1:
+                LocalDate nouvelleDateEcheance = DateValidation.askDate("Nouvelle date d'échéance (YYYY-MM-DD): ");
+                p.get().setDateEcheance(nouvelleDateEcheance);
+                paiementDAOJDBC.modifier(p.get());
+                break;
+            case 2:
+                System.out.print("Nouveau type de paiement: ");
+                String nouveauTypePaiement = scanner.nextLine();
+                p.get().setTypePaiement(nouveauTypePaiement);
+                paiementDAOJDBC.modifier(p.get());
+                break;
+            case 3:
+                System.out.print("Nouveau statut: ");
+                String nouveauStatut = scanner.nextLine();
+                try {
+                    p.get().setStatut(PayStatut.valueOf(nouveauStatut.toUpperCase()));
+                    paiementDAOJDBC.modifier(p.get());
+                } catch (IllegalArgumentException e) {
+                    System.out.println("❌ Statut invalide. Valeurs possibles : " + Arrays.toString(PayStatut.values()));
+                }
+                break;
+            case 4:
+                System.out.println("Opération annulée.");
+                break;
+        }
     }
 
     private static void supprimerPaiement() throws SQLException {
