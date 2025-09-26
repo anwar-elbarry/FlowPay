@@ -14,6 +14,7 @@ import utilities.PayStatut;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.UUID;
 
@@ -50,6 +51,7 @@ public class Main {
                     creerAbonnement();
                     break;
                 case 2:
+                    listerAbonnements();
                     modifierAbonnement();
                     break;
                 case 3:
@@ -147,7 +149,82 @@ public class Main {
 
 
     private static void modifierAbonnement() throws SQLException {
+        try {
+            System.out.print("ID de l'abonnement a modifier: ");
+            String id = scanner.nextLine();
+            Optional<Abonnement> abonnement = abonnementDAOJDBC.findById(id);
+            if (!abonnement.isPresent()) {
+                System.out.println("Abonnement non trouvé !");
+                return;
+            }
+            Abonnement abonnementModif = abonnement.get();
 
+            // Afficher le menu des modifications possibles
+            System.out.println("\nQue souhaitez-vous modifier ?");
+            System.out.println("1. Statut de l'abonnement");
+            System.out.println("2. Montant mensuel");
+            System.out.println("3. Date de fin");
+            System.out.println("4. Annuler");
+            System.out.print("Votre choix (1-4) : ");
+
+            int choix = 0;
+
+            try {
+                choix = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Veuillez entrer un nombre valide.");
+                return;
+            }
+            switch (choix) {
+                case 1:
+                    System.out.println("\nNouveau statut (ACTIVE, SUSPENDU, RESILIE) : ");
+                    try {
+                        AbnStatut nouveauStatut = AbnStatut.valueOf(scanner.nextLine().toUpperCase());
+                        abonnementModif.setStatut(nouveauStatut);
+                        abonnementDAOJDBC.modifier(abonnementModif);
+                        System.out.println("✅ Statut mis à jour avec succès !");
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("❌ Statut invalide. Les valeurs possibles sont : ACTIVE, SUSPENDU, RESILIE");
+                    }
+                    break;
+
+                case 2:
+                    System.out.print("Nouveau montant mensuel : ");
+                    try {
+                        double nouveauMontant = Double.parseDouble(scanner.nextLine());
+                        if (nouveauMontant <= 0) {
+                            System.out.println("❌ Le montant doit être supérieur à 0");
+                            return;
+                        }
+                        abonnementModif.setMontantMensuel(nouveauMontant);
+                        abonnementDAOJDBC.modifier(abonnementModif);
+                        System.out.println("✅ Montant mensuel mis à jour avec succès !");
+                    } catch (NumberFormatException e) {
+                        System.out.println("❌ Veuillez entrer un montant valide.");
+                    }
+                    break;
+
+                case 3:
+                    LocalDate nouvelleDateFin = DateValidation.askDate("Nouvelle date de fin (YYYY-MM-DD) : ");
+                    if (nouvelleDateFin.isBefore(abonnementModif.getDateDebut())) {
+                        System.out.println("❌ La date de fin doit être postérieure à la date de début (" + abonnementModif.getDateDebut() + ")");
+                        return;
+                    }
+                    abonnementModif.setDateFin(nouvelleDateFin);
+                    abonnementDAOJDBC.modifier(abonnementModif);
+                    System.out.println("✅ Date de fin mise à jour avec succès !");
+                    break;
+
+                case 4:
+                    System.out.println("Opération annulée.");
+                    break;
+
+                default:
+                    System.out.println("❌ Option non valide.");
+            }
+        } catch (SQLException e) {
+            System.out.println("❌ Erreur lors de la modification de l'abonnement.");
+        }
     }
 
     private static void supprimerAbonnement() throws SQLException {
