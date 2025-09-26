@@ -100,8 +100,14 @@ public class PaiementDAOJDBC implements PaiementDAO {
     }
 
     @Override
-    public void supprimer(String id) {
-
+    public void supprimer(String id) throws SQLException {
+        String sql = "DELETE FROM paiement WHERE id_paiement = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setObject(1, UUID.fromString(id));
+            pr.executeUpdate();
+        } catch (SQLException e) {
+            throw new SQLException(e.getMessage());
+        }
     }
 
     @Override
