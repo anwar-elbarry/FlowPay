@@ -55,6 +55,7 @@ public class Main {
                     modifierAbonnement();
                     break;
                 case 3:
+                    listerAbonnements();
                     supprimerAbonnement();
                     break;
                 case 4:
@@ -228,6 +229,14 @@ public class Main {
     }
 
     private static void supprimerAbonnement() throws SQLException {
+        System.out.print("ID de l'abonnement a supprimer: ");
+        String id = scanner.nextLine();
+        boolean isDeleted = abonnementDAOJDBC.supprimer(id);
+        if (isDeleted) {
+            System.out.println("Abonnement supprimé avec succès.");
+        } else {
+            System.out.println("Abonnement non trouvé.");
+        }
     }
 
     private static void listerAbonnements() throws SQLException {
