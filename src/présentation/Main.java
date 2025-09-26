@@ -6,6 +6,7 @@ import entity.Abonnement;
 
 import entity.Paiement;
 import métier.AbonnementService;
+import métier.PaiementService;
 import utilities.AbnStatut;
 import utilities.DatabaseConnection;
 import utilities.DateValidation;
@@ -24,11 +25,15 @@ public class Main {
     static Scanner scanner = new Scanner(System.in);
     static AbonnementDAOJDBC abonnementDAOJDBC;
     static AbonnementService abonnementService;
+    static PaiementDAOJDBC paiementDAOJDBC;
+    static PaiementService paiementService;
 
     static {
         try {
             abonnementDAOJDBC = new AbonnementDAOJDBC(DatabaseConnection.getConnection());
             abonnementService = new AbonnementService(abonnementDAOJDBC);
+            paiementDAOJDBC = new PaiementDAOJDBC(DatabaseConnection.getConnection());
+            paiementService = new PaiementService(paiementDAOJDBC);
         } catch (SQLException e) {
             throw new RuntimeException("Error initializing DAO or Service", e);
         }
@@ -62,6 +67,7 @@ public class Main {
                     listerAbonnements();
                     break;
                 case 5:
+                    listerAbonnements();
                     afficherPaiements();
                     break;
                 case 6:
@@ -144,7 +150,9 @@ public class Main {
             type_abonnement = "SANS_ENGAGEMENT";
             duree_Engagement_Mois = 0;
         }
-        abonnementService.creer(nom, montant, dateDebut, dateFin, AbnStatut.ACTIVE, type_abonnement, duree_Engagement_Mois);
+        Abonnement abonnement = abonnementService.creer(nom, montant, dateDebut, dateFin, AbnStatut.ACTIVE, type_abonnement, duree_Engagement_Mois);
+        Paiement p = new Paiement(UUID.randomUUID(), dateFin, abonnement.getId(), null, "bank", PayStatut.NON_PAYE);
+        paiementService.enregistrer(p);
         System.out.println("Abonnement créé avec succée ");
     }
 
@@ -246,11 +254,28 @@ public class Main {
     }
 
     private static void afficherPaiements() throws SQLException {
-
+        System.out.print("ID de l'abonnement: ");
+        String idAbonnement = scanner.nextLine();
+        List<Paiement> listPaiement = paiementDAOJDBC.findByAbonnement(idAbonnement);
+        if (listPaiement.isEmpty()) {
+            System.out.println("Aucun paiement trouvé pour cet abonnement.");
+        } else {
+            System.out.println("============= Liste des paiements ===========");
+            listPaiement.forEach(System.out::println);
+            System.out.println("==============================================");
+        }
     }
 
     private static void enregistrerPaiement() throws SQLException {
-
+        System.out.print("ID de l'abonnement: ");
+        String idAbonnement = scanner.nextLine();
+        System.out.println("Date d'echeance (YYYY-MM-DD): ");
+        LocalDate dateEcheance = DateValidation.askDate("Date d'echeance (YYYY-MM-DD): ");
+        System.out.println("Type de paiement: ");
+        String typePaiement = scanner.nextLine();
+        UUID id = UUID.randomUUID();
+        PayStatut statut = PayStatut.NON_PAYE;
+        Paiement p = new Paiement(id, dateEcheance, UUID.fromString(idAbonnement), LocalDate.now(), typePaiement, statut);
     }
 
     private static void modifierPaiement() throws SQLException {
