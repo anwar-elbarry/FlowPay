@@ -160,7 +160,27 @@ public class PaiementDAOJDBC implements PaiementDAO {
     }
 
     @Override
-    public List<Paiement> findLastPayments(int Limit) {
-        return Collections.emptyList();
+    public List<Paiement> findLastPayments(int Limit) throws SQLException {
+        List<Paiement> paiementsList = new ArrayList<>();
+        String sql = "SELECT * FROM paiement WHERE statut = ? ORDER BY date_echeance DESC LIMIT ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setString(1, PayStatut.PAYE.name());
+            pr.setInt(2, Limit);
+            ResultSet result = pr.executeQuery();
+            while (result.next()) {
+                Paiement p = new Paiement(
+                        (UUID) result.getObject("id_paiement"),
+                        result.getDate("date_echeance").toLocalDate(),
+                        (UUID) result.getObject("id_abonnement"),
+                        result.getDate("date_paiement") != null ? result.getDate("date_paiement").toLocalDate() : null,
+                        result.getString("type_paiement"),
+                        PayStatut.valueOf(result.getString("statut"))
+                );
+                paiementsList.add(p);
+            }
+        } catch (SQLException e) {
+            throw new SQLException("error while fetching all paiements :" + e.getMessage());
+        }
+        return paiementsList;
     }
 }
