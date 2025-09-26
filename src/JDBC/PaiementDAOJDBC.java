@@ -135,8 +135,28 @@ public class PaiementDAOJDBC implements PaiementDAO {
     }
 
     @Override
-    public List<Paiement> findUnpaidByAbonnement(String idAbonnement) {
-        return Collections.emptyList();
+    public List<Paiement> findUnpaidByAbonnement(String idAbonnement) throws SQLException {
+        List<Paiement> paiementsList = new ArrayList<>();
+        String sql = "SELECT * FROM paiement WHERE id_abonnement = ? AND statut = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setObject(1, UUID.fromString(idAbonnement));
+            pr.setString(2, PayStatut.NON_PAYE.name());
+            ResultSet result = pr.executeQuery();
+            while (result.next()) {
+                Paiement p = new Paiement(
+                        (UUID) result.getObject("id_paiement"),
+                        result.getDate("date_echeance").toLocalDate(),
+                        (UUID) result.getObject("id_abonnement"),
+                        result.getDate("date_paiement") != null ? result.getDate("date_paiement").toLocalDate() : null,
+                        result.getString("type_paiement"),
+                        PayStatut.valueOf(result.getString("statut"))
+                );
+                paiementsList.add(p);
+            }
+        } catch (SQLException e) {
+            throw new SQLException("error while fetching all paiements :" + e.getMessage());
+        }
+        return paiementsList;
     }
 
     @Override
