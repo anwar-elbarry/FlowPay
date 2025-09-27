@@ -64,15 +64,12 @@ public class Main {
                     listerAbonnements();
                     break;
                 case 5:
-                    listerAbonnements();
                     afficherPaiements();
                     break;
                 case 6:
                     enregistrerPaiement();
                     break;
                 case 7:
-                    listerAbonnements();
-                    afficherPaiements();
                     modifierPaiement();
                     break;
                 case 8:
@@ -253,6 +250,7 @@ public class Main {
     }
 
     private static void afficherPaiements() throws SQLException {
+        listerAbonnements();
         System.out.print("ID de l'abonnement: ");
         String idAbonnement = scanner.nextLine();
         List<Paiement> listPaiement = paiementDAOJDBC.findByAbonnement(idAbonnement);
@@ -280,6 +278,7 @@ public class Main {
     }
 
     private static void modifierPaiement() throws SQLException {
+        afficherPaiements();
         System.out.print("ID du paiement à modifier: ");
         String id = scanner.nextLine();
         Optional<Paiement> p = paiementDAOJDBC.findById(id);
@@ -342,7 +341,15 @@ public class Main {
     }
 
     private static void supprimerPaiement() throws SQLException {
-
+        afficherPaiements();
+        System.out.print("ID du paiement à supprimer: ");
+        String id = scanner.nextLine();
+        boolean isDeleted = paiementDAOJDBC.supprimer(id);
+        if (isDeleted) {
+            System.out.println("Paiement supprimé avec succès.");
+        } else {
+            System.out.println("Paiement non trouvé.");
+        }
     }
 
     private static void consulterPaiementsManques() throws SQLException {
