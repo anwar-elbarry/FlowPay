@@ -87,12 +87,13 @@ public class PaiementDAOJDBC implements PaiementDAO {
 
     @Override
     public void modifier(Paiement p) throws SQLException {
-        String sql = "UPDATE paiement SET date_echeance = ? , type_paiement = ?,statut = ? WHERE id_paiement = ?";
+        String sql = "UPDATE paiement SET date_echeance = ? , date_paiement = ?, type_paiement = ?,statut = ? WHERE id_paiement = ?";
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
             pr.setDate(1, java.sql.Date.valueOf(p.getDateEcheance()));
-            pr.setString(2, p.getTypePaiement());
-            pr.setString(3, p.getStatut().name());
-            pr.setObject(4, p.getIdPaiement());
+            pr.setDate(2, java.sql.Date.valueOf(p.getDatePaiement()));
+            pr.setString(3, p.getTypePaiement());
+            pr.setString(4, p.getStatut().name());
+            pr.setObject(5, p.getIdPaiement());
             pr.executeUpdate();
         } catch (SQLException e) {
             throw new SQLException(e.getMessage());
@@ -100,11 +101,12 @@ public class PaiementDAOJDBC implements PaiementDAO {
     }
 
     @Override
-    public void supprimer(String id) throws SQLException {
+    public boolean supprimer(String id) throws SQLException {
         String sql = "DELETE FROM paiement WHERE id_paiement = ?";
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
             pr.setObject(1, UUID.fromString(id));
             pr.executeUpdate();
+            return true;
         } catch (SQLException e) {
             throw new SQLException(e.getMessage());
         }
@@ -141,6 +143,29 @@ public class PaiementDAOJDBC implements PaiementDAO {
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
             pr.setObject(1, UUID.fromString(idAbonnement));
             pr.setString(2, PayStatut.NON_PAYE.name());
+            ResultSet result = pr.executeQuery();
+            while (result.next()) {
+                Paiement p = new Paiement(
+                        (UUID) result.getObject("id_paiement"),
+                        result.getDate("date_echeance").toLocalDate(),
+                        (UUID) result.getObject("id_abonnement"),
+                        result.getDate("date_paiement") != null ? result.getDate("date_paiement").toLocalDate() : null,
+                        result.getString("type_paiement"),
+                        PayStatut.valueOf(result.getString("statut"))
+                );
+                paiementsList.add(p);
+            }
+        } catch (SQLException e) {
+            throw new SQLException("error while fetching all paiements :" + e.getMessage());
+        }
+        return paiementsList;
+    }
+
+    public List<Paiement> findUnpaid() throws SQLException {
+        List<Paiement> paiementsList = new ArrayList<>();
+        String sql = "SELECT * FROM paiement WHERE statut = ?";
+        try (PreparedStatement pr = connection.prepareStatement(sql)) {
+            pr.setString(1, PayStatut.NON_PAYE.name());
             ResultSet result = pr.executeQuery();
             while (result.next()) {
                 Paiement p = new Paiement(
