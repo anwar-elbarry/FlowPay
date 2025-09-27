@@ -20,7 +20,7 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
     }
 
     @Override
-    public void create(Abonnement a, String type_abonnement) {
+    public Abonnement create(Abonnement a, String type_abonnement) {
 
         String sql = "INSERT INTO abonnement (id,nom_service, montant_mensuel, date_debut, date_fin, statut, type_abonnement, duree_engagement_mois) VALUES (?,?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pr = connection.prepareStatement(sql)) {
@@ -33,6 +33,7 @@ public class AbonnementDAOJDBC implements AbonnementDAO {
             pr.setString(7, type_abonnement);
             pr.setInt(8, Objects.equals(type_abonnement, "AVEC_ENGAGEMENT") ? ((AbonnementAvecEngagement) a).getDureeEngagementMois() : 0);
             pr.executeUpdate();
+            return a;
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la création de l'abonnement : " + e);
         }
