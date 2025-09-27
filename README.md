@@ -241,6 +241,10 @@ Paiement paiement = new Paiement(
     PayStatut.NON_PAYE                   // statut
 );
 ```
+## Links
+
+👉 [Voir le diagramme de class](https://lucid.app/lucidchart/5a2d4306-7d26-4731-99de-65c6ff125b22/edit?viewport_loc=-13644%2C-6609%2C20458%2C9341%2C0_0&invitationId=inv_57ef5155-2e3a-45d5-bb93-8b3dde35838f)
+
 
 ## 🤝 Contribution
 
