@@ -5,12 +5,18 @@ import entity.Abonnement;
 import entity.AbonnementAvecEngagement;
 import entity.AbonnementSansEngagement;
 
+import entity.Paiement;
 import utilities.AbnStatut;
+import utilities.PayStatut;
 
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static présentation.Main.paiementDAOJDBC;
 
 public class AbonnementService {
     private AbonnementDAOJDBC abonnementDAOJDBC;
@@ -19,7 +25,7 @@ public class AbonnementService {
         this.abonnementDAOJDBC = abonnementDAOJDBC;
     }
 
-    public void creer(String nom_service, double montant_mensuel, LocalDate date_debut, LocalDate date_fin, AbnStatut statut, String type_abonnement, int duree_engagement_mois) throws SQLException {
+    public Abonnement creer(String nom_service, double montant_mensuel, LocalDate date_debut, LocalDate date_fin, AbnStatut statut, String type_abonnement, int duree_engagement_mois) throws SQLException {
         if (montant_mensuel <= 0) {
             throw new IllegalArgumentException("le montant doit être positif");
         }
@@ -30,8 +36,7 @@ public class AbonnementService {
         } else {
             ab = new AbonnementSansEngagement(id, nom_service, montant_mensuel, date_debut, date_fin, statut);
         }
-        ;
-        this.abonnementDAOJDBC.create(ab, type_abonnement);
+        return this.abonnementDAOJDBC.create(ab, type_abonnement);
     }
 
     public Abonnement modifier(Abonnement abonnement) throws SQLException {
@@ -53,6 +58,28 @@ public class AbonnementService {
         return "L'abonnement avec l'ID \" + id + \" a été résilié avec succès.";
     }
 
-    public void genererEcheance() {
+    public void genererEcheance() throws SQLException {
+        List<Abonnement> activeSubscriptions = abonnementDAOJDBC.findAll().stream()
+                .filter(abonnement -> abonnement.getStatut() == AbnStatut.ACTIVE)
+                .collect(Collectors.toList());
+
+        for (Abonnement abonnement : activeSubscriptions) {
+            LocalDate nextBillingDate = abonnement.getDateFin().plusMonths(1);
+
+            // Create new payment record
+            Paiement nextPayment = new Paiement(
+                    UUID.randomUUID(),
+                    nextBillingDate,
+                    abonnement.getId(),
+                    null,
+                    "bank",
+                    PayStatut.NON_PAYE
+            );
+
+            paiementDAOJDBC.create(nextPayment);
+
+            abonnement.setDateFin(nextBillingDate);
+            abonnementDAOJDBC.modifier(abonnement);
+        }
     }
 }
