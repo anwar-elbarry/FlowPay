@@ -329,8 +329,12 @@ public class Main {
             case 3:
                 System.out.print("Nouveau statut: ");
                 String nouveauStatut = scanner.nextLine();
+                System.out.println("DEBUG: Input status: '" + nouveauStatut + "'");
                 try {
                     p.get().setStatut(PayStatut.valueOf(nouveauStatut.toUpperCase()));
+                    if (p.get().getStatut() == PayStatut.PAYE) {
+                        p.get().setDatePaiement(LocalDate.now());
+                    }
                     paiementDAOJDBC.modifier(p.get());
                 } catch (IllegalArgumentException e) {
                     System.out.println("❌ Statut invalide. Valeurs possibles : " + Arrays.toString(PayStatut.values()));
@@ -412,8 +416,71 @@ public class Main {
         }
     }
 
-    private static void afficherSommePayee() {
+    private static void afficherSommePayee() throws SQLException {
+        try {
+            System.out.print("ID de l'abonnement : ");
+            String id = scanner.nextLine();
 
+            // Vérifier si l'abonnement existe
+            Optional<Abonnement> abonnementOpt = abonnementDAOJDBC.findById(id);
+            if (!abonnementOpt.isPresent()) {
+                System.out.println("❌ Aucun abonnement trouvé avec l'ID: " + id);
+                return;
+            }
+
+            Abonnement abonnement = abonnementOpt.get();
+            System.out.println("Abonnement : " + abonnement.getNomService());
+
+            // Récupérer tous les paiements de cet abonnement
+            List<Paiement> tousLesPaiements = paiementDAOJDBC.findByAbonnement(id);
+
+            if (tousLesPaiements.isEmpty()) {
+                System.out.println("Aucun paiement trouvé pour cet abonnement.");
+                return;
+            }
+
+            // Filtrer les paiements payés
+            List<Paiement> paiementsPayes = new ArrayList<>();
+            double totalPaye = 0.0;
+
+            for (Paiement paiement : tousLesPaiements) {
+                if (paiement.getStatut() == PayStatut.PAYE) {
+                    paiementsPayes.add(paiement);
+                    totalPaye += abonnement.getMontantMensuel();
+                }
+            }
+
+            if (paiementsPayes.isEmpty()) {
+                System.out.println("Aucun paiement payé trouvé pour cet abonnement.");
+                return;
+            }
+
+            // Afficher les résultats
+            System.out.println("\n============= SOMME PAYÉE POUR L'ABONNEMENT ===========");
+            System.out.println("Abonnement : " + abonnement.getNomService());
+            System.out.println("Nombre de paiements payés : " + paiementsPayes.size());
+            System.out.println("Montant mensuel : " + String.format("%.2f", abonnement.getMontantMensuel()) + " DH");
+            System.out.println("------------------------------------------------------");
+            System.out.printf("TOTAL PAYÉ : %.2f DH%n", totalPaye);
+            System.out.println("=======================================================");
+
+            // Afficher les détails des paiements payés
+            System.out.println("\nDétails des paiements payés :");
+            System.out.printf("%-15s | %-12s | %-15s%n", "ID Paiement", "Date Échéance", "Date Paiement");
+            System.out.println("------------------------------------------------------");
+
+            for (Paiement paiement : paiementsPayes) {
+                System.out.printf("%-15s | %-12s | %-15s%n",
+                        paiement.getIdPaiement(),
+                        paiement.getDateEcheance().toString(),
+                        paiement.getDatePaiement() != null ? paiement.getDatePaiement().toString() : "N/A");
+            }
+
+            System.out.println("=======================================================");
+
+        } catch (SQLException e) {
+            System.err.println("❌ Erreur lors du calcul de la somme payée : " + e.getMessage());
+        }
     }
 
     private static void afficherDerniersPaiements() throws SQLException {
