@@ -82,4 +82,27 @@ public class AbonnementService {
             abonnementDAOJDBC.modifier(abonnement);
         }
     }
+
+    public void abonnementAnalyse() throws SQLException {
+        try {
+            List<Abonnement> activeSubscriptions = abonnementDAOJDBC.findAll().stream()
+                    .filter(abonnement -> abonnement.getStatut() == AbnStatut.ACTIVE)
+                    .collect(Collectors.toList());
+            List<Abonnement> suspanduSubscriptions = abonnementDAOJDBC.findAll().stream()
+                    .filter(abonnement -> abonnement.getStatut() == AbnStatut.SUSPENDU)
+                    .collect(Collectors.toList());
+            List<Abonnement> resilieSubscriptions = abonnementDAOJDBC.findAll().stream()
+                    .filter(abonnement -> abonnement.getStatut() == AbnStatut.RESILIE)
+                    .collect(Collectors.toList());
+            List<Abonnement> expirSubscriptions = abonnementDAOJDBC.findAll().stream()
+                    .filter(abonnement -> abonnement.getDateFin().isBefore(LocalDate.now()))
+                    .collect(Collectors.toList());
+            System.out.println("Active Subscriptions: " + activeSubscriptions.size());
+            System.out.println("Suspandu Subscriptions: " + suspanduSubscriptions.size());
+            System.out.println("Resilie Subscriptions: " + resilieSubscriptions.size());
+            System.out.println("Expir Subscriptions: " + expirSubscriptions.size());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
