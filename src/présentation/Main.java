@@ -484,6 +484,18 @@ public class Main {
     }
 
     private static void afficherDerniersPaiements() throws SQLException {
+        List<Paiement> paiements = paiementDAOJDBC.findLastPayments(5);
+        System.out.println("Derniers paiements : ");
+        System.out.println("------------------------------------------------------");
+        System.out.printf("%-15s | %-12s | %-15s%n", "ID Paiement", "Date Échéance", "Date Paiement");
+        System.out.println("------------------------------------------------------");
+        for (Paiement paiement : paiements) {
+            System.out.printf("%-15s | %-12s | %-15s%n",
+                    paiement.getIdPaiement(),
+                    paiement.getDateEcheance().toString(),
+                    paiement.getDatePaiement() != null ? paiement.getDatePaiement().toString() : "N/A");
+        }
+        System.out.println("=======================================================");
     }
 
     private static void genererRapports() {
