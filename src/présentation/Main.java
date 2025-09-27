@@ -4,6 +4,7 @@ import JDBC.AbonnementDAOJDBC;
 import JDBC.PaiementDAOJDBC;
 import entity.Abonnement;
 
+import entity.AbonnementAvecEngagement;
 import entity.Paiement;
 import métier.AbonnementService;
 import métier.PaiementService;
@@ -15,6 +16,7 @@ import utilities.PayStatut;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -353,7 +355,61 @@ public class Main {
     }
 
     private static void consulterPaiementsManques() throws SQLException {
+        try {
 
+            List<Paiement> listUnpaid = paiementDAOJDBC.findUnpaid();
+
+            if (listUnpaid.isEmpty()) {
+                System.out.println("Aucun paiement manquant.");
+                return;
+            }
+
+            List<Paiement> paiementsEngagement = new ArrayList<>();
+            double totalImpaye = 0.0;
+
+            for (Paiement paiement : listUnpaid) {
+                Optional<Abonnement> abonnementOpt = abonnementDAOJDBC.findById(paiement.getIdAbonnement().toString());
+                if (abonnementOpt.isPresent()) {
+                    Abonnement abonnement = abonnementOpt.get();
+                    if (abonnement instanceof AbonnementAvecEngagement) {
+                        paiementsEngagement.add(paiement);
+                        totalImpaye += abonnement.getMontantMensuel();
+                    }
+                }
+            }
+
+            if (paiementsEngagement.isEmpty()) {
+                System.out.println("Aucun paiement manquant pour les abonnements avec engagement.");
+                return;
+            }
+
+            System.out.println("============= PAIEMENTS MANQUÉS (ABONNEMENTS AVEC ENGAGEMENT) ===========");
+            System.out.println("Nombre de paiements manquants : " + paiementsEngagement.size());
+            System.out.println("Montant total impayé : " + String.format("%.2f", totalImpaye) + " DH");
+            System.out.println("-------------------------------------------------------------------------");
+
+            System.out.printf("%-15s | %-12s | %-15s | %-10s%n", "ID Paiement", "Date Échéance", "Abonnement", "Montant");
+            System.out.println("-------------------------------------------------------------------------");
+
+            for (Paiement paiement : paiementsEngagement) {
+                Optional<Abonnement> abonnementOpt = abonnementDAOJDBC.findById(paiement.getIdAbonnement().toString());
+                if (abonnementOpt.isPresent()) {
+                    Abonnement abonnement = abonnementOpt.get();
+                    System.out.printf("%-15s | %-12s | %-15s | %6.2f DH%n",
+                            paiement.getIdPaiement(),
+                            paiement.getDateEcheance().toString(),
+                            abonnement.getNomService(),
+                            abonnement.getMontantMensuel());
+                }
+            }
+
+            System.out.println("=========================================================================");
+            System.out.printf("TOTAL IMPAYÉ : %.2f DH%n", totalImpaye);
+            System.out.println("=========================================================================");
+
+        } catch (SQLException e) {
+            System.err.println("❌ Erreur lors de la consultation des paiements manqués : " + e.getMessage());
+        }
     }
 
     private static void afficherSommePayee() {
