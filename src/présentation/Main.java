@@ -16,10 +16,7 @@ import utilities.PayStatut;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     static Scanner scanner = new Scanner(System.in);
     static AbonnementDAOJDBC abonnementDAOJDBC;
@@ -503,8 +500,21 @@ public class Main {
     }
 
     private static void genererRapports() {
-        System.out.println("Générer rapports financiers...");
-        // Logic for financial reports
+        System.out.println("============ Paiement Analyse ===========");
+        try {
+            paiementService.paiementAnalys();
+        } catch (SQLException e) {
+            System.out.println("Erreur lors de l'analyse des paiements : " + e.getMessage());
+        }
+        System.out.println("=========================================\n");
+
+        System.out.println("============= Abonnement Analyse ==============");
+        try {
+            abonnementService.abonnementAnalyse();
+        } catch (SQLException e) {
+            System.out.println("Erreur lors de l'analyse des abonnements : " + e.getMessage());
+        }
+        System.out.println("================================================");
     }
 
     private static void genererEcheances() {
