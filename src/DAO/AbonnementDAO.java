@@ -7,15 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AbonnementDAO {
-    void create(Abonnement a, String type_abonnement);
+    Abonnement create(Abonnement a, String type_abonnement);
 
     Optional<Abonnement> findById(String id) throws SQLException;
 
     List<Abonnement> findAll() throws SQLException;
 
-    void modifier(Abonnement a) throws SQLException;
+    Abonnement modifier(Abonnement a) throws SQLException;
 
-    void supprimer(String id) throws SQLException;
+    boolean supprimer(String id) throws SQLException;
 
     List<Abonnement> findByType(String type) throws SQLException;
 
