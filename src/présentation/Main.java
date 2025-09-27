@@ -24,7 +24,7 @@ public class Main {
     static Scanner scanner = new Scanner(System.in);
     static AbonnementDAOJDBC abonnementDAOJDBC;
     static AbonnementService abonnementService;
-    static PaiementDAOJDBC paiementDAOJDBC;
+    public static PaiementDAOJDBC paiementDAOJDBC;
     static PaiementService paiementService;
 
     static {
@@ -89,6 +89,9 @@ public class Main {
                 case 12:
                     genererRapports();
                     break;
+                case 13: // NEW CASE
+                    genererEcheances();
+                    break;
                 case 0:
                     System.out.println("Au revoir !");
                     break;
@@ -114,6 +117,7 @@ public class Main {
         System.out.println("10. Afficher la somme payée d'un abonnement");
         System.out.println("11. Afficher les 5 derniers paiements");
         System.out.println("12. Générer des rapports financiers");
+        System.out.println("13. Générer les échéances de paiement");
         System.out.println("0. Quitter");
         System.out.print("Choix: ");
     }
@@ -501,5 +505,15 @@ public class Main {
     private static void genererRapports() {
         System.out.println("Générer rapports financiers...");
         // Logic for financial reports
+    }
+
+    private static void genererEcheances() {
+        System.out.println("Générer Date D'echeance");
+        try {
+            abonnementService.genererEcheance();
+            System.out.println("Dates d'echeance générées avec succès.");
+        } catch (SQLException e) {
+            System.out.println("Erreur lors de la génération des dates d'echeance : " + e.getMessage());
+        }
     }
 }
